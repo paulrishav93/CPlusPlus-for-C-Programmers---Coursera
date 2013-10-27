@@ -1,0 +1,143 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <climits>
+#include <ctime>
+#include <cstdlib>
+
+using namespace std;
+
+class Graph
+{
+
+private:
+
+    typedef pair<double,int> ii;
+    priority_queue<ii, vector<ii>, greater<ii> > Q;
+    vector<double> distance;
+    vector< vector<ii> > edge;
+    int V, adjacent_vertices;
+    double MAX_DISTANCE;
+    double sum;
+
+public:
+
+    Graph(int vertices=-1)
+    {
+        V=vertices;
+        MAX_DISTANCE=static_cast<double>(INT_MAX);
+        distance=vector<double> (V+1,MAX_DISTANCE);
+        edge.resize(V+1);
+        srand(time(0));
+    }
+
+    void addEdge(int u, int v, double w)
+    {
+        edge[u].push_back(ii(v,w));
+        edge[v].push_back(ii(u,w));
+    }
+
+    double dijkstra(int source)
+    {
+        distance[source]=0.0;
+
+        Q.push(ii(0.0,source));
+
+        while(!Q.empty())
+        {
+            ii top=Q.top();
+
+            Q.pop();
+
+            int d=top.first,v=top.second;
+
+            if(d<=distance[v])
+            {
+                for(unsigned int i=0;i<edge[v].size();++i)
+                {
+                    int v2=edge[v][i].first;
+                    int d2=edge[v][i].second;
+
+                    if(distance[v2]>distance[v]+d2)
+                    {
+                        distance[v2]=distance[v]+d2;
+                        Q.push(ii(distance[v2],v2));
+                    }
+                }
+            }
+        }
+
+        return averageDistance();
+    }
+
+    double averageDistance()
+    {
+        sum=0;
+        adjacent_vertices=V;
+
+        for(int i=1;i<=V;++i)
+        {
+                if(distance[i]==MAX_DISTANCE) adjacent_vertices--;
+                else sum+=distance[i];
+        }
+
+        return static_cast<double>(sum)/adjacent_vertices;
+    }
+
+    void reset()
+    {
+        priority_queue<ii, vector<ii>, greater<ii> > empty;
+        swap(Q,empty);
+        distance.clear();
+        edge.clear();
+    }
+
+    void printDistance()
+    {
+        for(int i=1;i<=V;++i)
+            cout<<static_cast<double>(distance[i])<<endl;
+        cout<<endl;
+    }
+
+    void monteCarloSimulation(double density, double weightLO, double weightHI)
+    {
+        double probability,weight;
+
+        for(int i=1;i<=50;++i)
+        {
+            for(int j=i+1;j<=50;++j)
+            {
+                probability=static_cast<double>(rand())/RAND_MAX;
+
+                if(probability<=density)
+                {
+                    weight=weightLO+(weightHI-weightLO)*(static_cast<double>(rand())/RAND_MAX);
+                    addEdge(i,j,weight);
+                }
+            }
+        }
+    }
+};
+
+int main()
+{
+    Graph G20,G40;
+
+    double sum20=0,sum40=0;
+
+    for(int i=1;i<=100000;++i)
+    {
+        G20=Graph(50);
+        G40=Graph(50);
+        G20.monteCarloSimulation(0.20,1.0,10.0);
+        G40.monteCarloSimulation(0.40,1.0,10.0);
+        sum20+=G20.dijkstra(1);
+        sum40+=G40.dijkstra(1);
+        G20.reset();
+        G40.reset();
+    }
+
+    cout<<sum20/10000<<endl<<sum40/100000;
+
+    return 0;
+}
