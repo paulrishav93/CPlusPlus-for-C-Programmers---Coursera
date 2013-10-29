@@ -75,8 +75,8 @@ public:
         //since its an undirected graph, we add the corresponding adjacent vertices
         //edges to the list of each vertex
         
-        edge[u].push_back(ii(v,w));
-        edge[v].push_back(ii(u,w));
+        edge[u].push_back(ii(w,v));
+        edge[v].push_back(ii(w,u));
     }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -98,7 +98,8 @@ public:
 
             Q.pop();
 
-            int d=top.first,v=top.second;
+            double d=top.first;
+            int v=top.second;
             
             //we analyze each vertex only once. 
             //The occurences of the vertices with greater distance 
@@ -109,8 +110,8 @@ public:
                 //all neighbouring vertices of 'v' are checked
                 for(unsigned int i=0;i<edge[v].size();++i)
                 {
-                    int v2=edge[v][i].first;
-                    int d2=edge[v][i].second;
+                    int v2=edge[v][i].second;
+                    double d2=edge[v][i].first;
                 
                     //if the earlier distance was more, then we update the distance array
                     //and push the vertex onto the queue
