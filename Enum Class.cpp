@@ -9,9 +9,9 @@ enum class PlayerColor{RED,BLUE};
 ostream& operator<<(ostream &stream, PlayerColor &ob)
 {
     if(ob==PlayerColor::BLUE)
-        cout<<"BLUE";
+        stream<<"BLUE";
     else if(ob==PlayerColor::RED)
-        cout<<"RED";
+        stream<<"RED";
 
     return stream;
 }
