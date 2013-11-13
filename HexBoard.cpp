@@ -24,6 +24,7 @@ private:
     vector< vector<char> > board;
     vector< vector<int> > edge;
     vector< vector<int> > vertices;
+    
 public:
     HexBoard(int size):SIZE(size),
         board(vector< vector<char> > (size+1, vector<char>(size+1, '.'))),
@@ -38,34 +39,40 @@ public:
 
     void printBoard();
     void Game();
+    void createBoard();
+    inline void addEdge(int u, int v);
+};
 
-    inline void addEdge(int u, int v)
+void HexBoard::addEdge(int u, int v)
+{
+    edge[u].push_back(v);
+    edge[v].push_back(u);
+}
+void HexBoard::createBoard()
+{
+    for(int i=1;i<=SIZE;++i)
     {
-        edge[u].push_back(v);
-        edge[v].push_back(u);
-    }
-
-    void createBoard()
-    {
-        for(int i=1;i<=SIZE;++i)
+        for(int j=1;j<=SIZE;++j)
         {
-            for(int j=1;j<=SIZE;++j)
+            if(i==1)
             {
-                if(i==1)
+                if(j<SIZE)
                 {
                     addEdge(vertices[i][j+1],vertices[i][j]);
                     addEdge(vertices[i+1][j],vertices[i][j]);
                     addEdge(vertices[i+1][j+1],vertices[i][j]);
                 }
-                else if(i==SIZE){}
-                else if (j==1){}
-                else if (j==SIZE){}
-                else{}
+                
+                else addEdge(vertices[i][j],vertices[i+1][j]);
             }
+            
+            else if(i==SIZE){}
+            else if (j==1){}
+            else if (j==SIZE){}
+            else{}
         }
     }
-};
-
+}
 void HexBoard::printBoard()
 {
     auto space=1,num=1;
