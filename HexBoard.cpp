@@ -25,7 +25,9 @@ private:
     PlayerColor player1color,player2color;
     vector< vector<char> > board;
     vector< vector<int> > edge;
-    vector< vector<int> > vertices;
+    typedef pair<int, PlayerColor> ip;
+    vector< vector< ip > > vertices;
+    //vector< vector<PlayerColor> > vertexColor;
     const int EAST,WEST,NORTH,SOUTH;
     int firstPlayer;                        //1 for player1 and 2 for player2
 
@@ -35,11 +37,14 @@ public:
     edge(vector< vector<int> > (size*size + 1 + 4)),EAST(size*size+1),WEST(size*size+2),
     NORTH(size*size+3),SOUTH(size*size+4)
     {
-        vertices=vector< vector<int> > (size +1,vector<int>(size + 1));
+        vertices=vector< vector< ip > > (size +1,vector< ip >(size + 1));
         auto c=1;
         for(auto i=vertices.begin()+1;i<vertices.end();++i)
             for(auto j=i->begin()+1;j<i->end();++j)
-                *j=c++;
+            {
+                (*j).first=c++;
+                j->second=PlayerColor::BLACK;
+            }
     }
 
     void printBoard();
@@ -50,6 +55,7 @@ public:
     int mainGame();
     void inputPlayer(int &, int &, const int);
     char character(const int);
+    void bfs(int source);
 
 };
 
@@ -80,11 +86,13 @@ void HexBoard::inputPlayer(int &row, int &column, const int presentPlayer)
         }
     }
 }
+
 void HexBoard::addEdge(int u, int v)
 {
     edge[u].push_back(v);
     edge[v].push_back(u);
 }
+
 void HexBoard::createBoard()
 {
     for(int i=1;i<=SIZE;++i)
@@ -95,30 +103,30 @@ void HexBoard::createBoard()
             {
                 if(j==1)
                 {
-                    addEdge(vertices[i][j+1],vertices[i][j]);
-                    addEdge(vertices[i+1][j],vertices[i][j]);
-                    addEdge(vertices[i+1][j+1],vertices[i][j]);
+                    addEdge(vertices[i][j+1].first,vertices[i][j].first);
+                    addEdge(vertices[i+1][j].first,vertices[i][j].first);
+                    addEdge(vertices[i+1][j+1].first,vertices[i][j].first);
                 }
 
                 else if(j<SIZE)
                 {
-                    addEdge(vertices[i][j+1],vertices[i][j]);
-                    addEdge(vertices[i+1][j],vertices[i][j]);
-                    addEdge(vertices[i+1][j+1],vertices[i][j]);
-                    addEdge(vertices[i+1][j-1],vertices[i][j]);
+                    addEdge(vertices[i][j+1].first,vertices[i][j].first);
+                    addEdge(vertices[i+1][j].first,vertices[i][j].first);
+                    addEdge(vertices[i+1][j+1].first,vertices[i][j].first);
+                    addEdge(vertices[i+1][j-1].first,vertices[i][j].first);
                 }
 
                 else
                 {
-                    addEdge(vertices[i][j],vertices[i+1][j]);
-                    addEdge(vertices[i+1][j-1],vertices[i][j]);
+                    addEdge(vertices[i][j].first,vertices[i+1][j].first);
+                    addEdge(vertices[i+1][j-1].first,vertices[i][j].first);
                 }
             }
 
             else if(i==SIZE)
             {
                 if(j<SIZE)
-                addEdge(vertices[i][j],vertices[i][j+1]);
+                addEdge(vertices[i][j].first,vertices[i][j+1].first);
             }
         }
     }
@@ -226,9 +234,8 @@ int HexBoard::mainGame()
 
     if(firstPlayer==1)
     {
-        int startColor=static_cast<int>(player1color);
         presentPlayer=1;
-        if(startColor==1)           //for starting with BLUE
+        if(player1color==PlayerColor::BLUE)           //for starting with BLUE
         {
             vnodeStart=EAST;
             vnodeEnd=WEST;
@@ -243,7 +250,7 @@ int HexBoard::mainGame()
             }
         }
 
-        else if(startColor==2)      //for starting with RED
+        else if(player1color==PlayerColor::RED)      //for starting with RED
         {
             vnodeStart=NORTH;
             vnodeEnd=SOUTH;
@@ -255,6 +262,7 @@ int HexBoard::mainGame()
 
     }
 }
+
 
 
 int main()
