@@ -1,3 +1,11 @@
+/*  HEX BOARD GAME
+
+All vertices on the edges of the board are connected to four nodes, EAST, WEST, NORTH and SOUTH respectively.
+They have been called virtual nodes.
+
+When a player chooses a location on the board, a BREADTH FIRST SEARCH is performed from that location. If two
+virtual nodes on opposite ends are visited for the respective player, the game ends*/
+
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -7,8 +15,12 @@
 
 using namespace std;
 
+//each vertex can be BLACK,BLUE or RED
+
 enum class PlayerColor {BLACK, BLUE, RED};
 
+//overloading the left bitshift operator for printing
+//objects of PlayerColor enum class
 ostream& operator << (ostream &stream, PlayerColor &ob)
 {
     if(ob==PlayerColor::BLUE)
@@ -23,29 +35,30 @@ ostream& operator << (ostream &stream, PlayerColor &ob)
 class HexBoard
 {
 private:
-    PlayerColor player1color,player2color;
-    vector< vector<char> > board;
-    vector< vector<int> > edge;
-    typedef pair<int, PlayerColor> ip;
-    vector< vector< ip > > vertices;
-    queue<ip> Q;
-    const int EAST,WEST,NORTH,SOUTH;
-    int firstPlayer,presentPlayer,SIZE;                        //1 for player1 and 2 for player2
-    vector<int> markedbfs;
 
-    void printBoard();
-    void Game();
-    void createBoard();
-    inline void addEdge(int,int);
-    void displayEdges();
-    int mainGame();
-    void inputPlayer(int &, int &, const int);
-    char character(const int);
-    void bfs(const ip);
-    int row_val(int);
-    int column_val(int);
-    void set_virtual_nodes();
-    void endgame();
+    PlayerColor player1color,player2color;                      //two players
+    vector< vector<char> > board;                               //stores the printable version of the board 2D matrix
+    vector< vector<int> > edge;                                 //stores the graph where each vertex is connected
+    typedef pair<int, PlayerColor> ip;                          //an object which shall store the vertex number & its color
+    vector< vector< ip > > vertices;                            //2D vector for pair<ip> objects
+    queue<ip> Q;                                                //will be used in BFS
+    const int EAST,WEST,NORTH,SOUTH;                            //stores the values assigned to the virtual nodes
+    int firstPlayer,presentPlayer,SIZE;                         //SIZE stores size of the board
+    vector<int> markedbfs;                                      //stores visited vertices in BFS
+
+    void printBoard();                                          //prints the board
+    void Game();                                                //begins the game
+    void createBoard();                                         //creates a board, makes the adjacency list connecting all nodes
+    inline void addEdge(int,int);                               //add an edge to the graph
+    void displayEdges();                                        //not used here. used to check if all nodes are connected
+    void mainGame();                                             //plays the game, players exchange turns
+    void inputPlayer(int &, int &, const int);                  //takes an input from a specified player
+    char character(const int);                                  //returns the character which shall represent the player on the board
+    void bfs(const ip);                                         //BFS
+    int row_val(int);                                           //for a given vertex value, calculates its equivalent row location
+    int column_val(int);                                        //for a given vertex value, calculates its equivalent col location
+    void set_virtual_nodes();                                   //sets the values of virtual nodes
+    void endgame();                                             //ends the game
 
 public:
     HexBoard(int size):SIZE(size),
@@ -73,6 +86,7 @@ public:
 
 void HexBoard::set_virtual_nodes()
 {
+    //sets the sttributes for all virtual nodes
     vertices[SIZE+1].resize(SIZE);
     vertices[row_val(EAST)][column_val(EAST)].second=PlayerColor::BLUE;
     vertices[row_val(EAST)][column_val(EAST)].first=EAST;
@@ -114,16 +128,20 @@ void HexBoard::bfs(const ip vertex)
     }
     cout<<endl;
 
-    if(markedbfs[WEST]==presentPlayer && markedbfs[EAST]==presentPlayer)  endgame();
+    //game ends only if same player is on both virtual nodes
+    if(markedbfs[WEST]==presentPlayer && markedbfs[EAST]==presentPlayer && present_player_color==PlayerColor::BLUE)  endgame();
 
-    if(markedbfs[NORTH]==presentPlayer && markedbfs[SOUTH]==presentPlayer) endgame();
+    if(markedbfs[NORTH]==presentPlayer && markedbfs[SOUTH]==presentPlayer && present_player_color==PlayerColor::RED) endgame();
 
+    //reset the markedbfs array
     markedbfs=(vector<int>(SIZE*SIZE+5,-1));
 }
 
 void HexBoard::endgame()
 {
-    cout<<"Player: "<<presentPlayer<<" wins\n";
+    cout<<endl;
+    cout<<"****************CONGRATULATIONS****************"<<endl<<endl;
+    cout<<endl<<"Player: "<<presentPlayer<<" wins\n";
     exit(0);
 }
 
@@ -143,27 +161,42 @@ int HexBoard::row_val(int val)
     return val;
 }
 
+//the character representing the players may be set here
 char HexBoard:: character(const int presentPlayer)
 {
     if(presentPlayer==1)
         return 'X';
-    else return '0';
+    else return 'O';
 }
+
+//takes the input of the row and column where a player wants to move next
 
 void HexBoard::inputPlayer(int &row, int &column, const int presentPlayer)
 {
-    char r,c;
+    char c;
     cout<<endl<<endl;
     row=column=0;
 
+    cout<<endl;
+    cout<<"**************************************************************"<<endl;
+    cout<<"Player: "<<presentPlayer<<" moves from";
+
+    PlayerColor temp;
+    if(presentPlayer==1) temp=player1color;
+    else temp=player2color;
+
+    if(temp==PlayerColor::BLUE) cout<<" WEST ---- > EAST and is represented by "<<character(presentPlayer)<<endl;
+
+    else cout<<" NORTH ---- > SOUTH and is represented by "<<character(presentPlayer)<<endl;
+
+    cout<<"**************************************************************"<<endl;
+
     while(row>SIZE||row<1||column>SIZE||column<1)
     {
-        cout<<"Enter your move player "<<presentPlayer<<", e.g. 6A"<<endl;
-        cin>>r>>c;
-        row=static_cast<int>(r)-48;
+        cout<<"Enter your move player "<<presentPlayer<<", e.g. 4C : ";
+        cin>>row>>c;
         column=static_cast<int>(c)-64;
-        if(row>SIZE||row<1||column>SIZE||column<1)
-            cout<<"Invalid Move."<<endl;
+        if(row>SIZE||row<1||column>SIZE||column<1) cout<<"Invalid Move."<<endl;
         else if(board[row][column]!='.')
         {
             cout<<"Cell already occupied. Please try again."<<endl;
@@ -216,6 +249,7 @@ void HexBoard::createBoard()
         }
     }
 
+    //connects the virtual nodes to the relevant vertices on the board
     for(int i=1;i<=SIZE*SIZE-SIZE+1;i+=SIZE)
         addEdge(EAST,i);
 
@@ -231,32 +265,14 @@ void HexBoard::createBoard()
 
 void HexBoard::printBoard()
 {
-    if(presentPlayer)
-    {
-        cout<<endl;
-        cout<<"**************************************************************"<<endl;
-        cout<<"Player: "<<presentPlayer<<" moves from";
-        if(presentPlayer)
-        {
-            PlayerColor temp;
-            if(presentPlayer==1) temp=player1color;
-            else temp=player2color;
 
-            if(temp==PlayerColor::BLUE)
-            {
-                cout<<" EAST ---- > WEST"<<endl;
-            }
-            else cout<<" NORTH ---- > SOUTH"<<endl;
-        }
-    }
 
     cout<<endl;
-    cout<<"               N"<<endl;
-    cout<<"               |"<<endl;
+    cout<<"             N"<<endl;
+    cout<<"              \\"<<endl;
     cout<<"           E --+--> W"<<endl;
-    cout<<"               |"<<endl;
-    cout<<"               v"<<endl;
-    cout<<"               S"<<endl;
+    cout<<"                \\"<<endl;
+    cout<<"                 S"<<endl;
     cout<<endl<<endl<<endl;
     auto space=1,num=1;
     char a;
@@ -286,7 +302,7 @@ void HexBoard::printBoard()
         cout<<a<<" ";
 }
 
-
+//function not used in program. may be removed
 void HexBoard::displayEdges()
 {
     auto c=1;
@@ -298,23 +314,28 @@ void HexBoard::displayEdges()
         cout<<endl;
     }
 }
+
+//initiates the game
 void HexBoard::Game()
 {
     printBoard();
     createBoard();
+
     cout<<endl<<endl<<"Board has been created\n";
     char choice;
-    cout<<endl<<endl;
+    cout<<endl;
+    cout<<"*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*";
+    cout<<endl;
 
-    cout<<"Player 1 - Enter 1 for Blue (EAST->WEST) and 2 for Red (NORTH->SOUTH)"<<endl;
+    cout<<"Player 1 - Enter 1 for Blue (WEST->EAST) and 2 for Red (NORTH->SOUTH) : ";
     cin>>choice;
     int ch=choice-48;
-    cout<<ch<<endl;
     cout<<endl;
 
     while(ch < 1 || ch > 2)
     {
-        cout<<"Enter a valid choice between 1 and 2"<<endl;
+        cout<<"*********************************************************************************"<<endl;
+        cout<<"Enter a valid choice between 1 and 2 : ";
         cin>>choice;
         ch=choice-48;
     }
@@ -327,7 +348,7 @@ void HexBoard::Game()
     cout<<"Player 2 Color is: "<<player2color<<endl;
 
     cout<<"Which player will make the first move?"<<endl;
-    cout<<"Press 1 for player 1 and 2 for player 2, or press any button for a toss"<<endl;
+    cout<<"Press 1 for player 1 and 2 for player 2, or press any other button for a toss : ";
     cin>>ch;
 
     if(ch==1) firstPlayer=1;
@@ -339,12 +360,13 @@ void HexBoard::Game()
         else firstPlayer=1;
     }
 
+    cout<<"*********************************************************************"<<endl;
     cout<<"Player "<<firstPlayer<<" will start the game"<<endl;
-
     mainGame();
 }
 
-int HexBoard::mainGame()
+//the game is played here, players change turns
+void HexBoard::mainGame()
 {
     int row, column;
 
@@ -371,9 +393,9 @@ int main()
 
     while(ch)
     {
-        cout<<"Enter size of the HexBoard: ";
+        cout<<"Enter size of the HexBoard (minimum 4): ";
         cin>>size;
-        if(size==0) cout<<"Wrong Size choice. Input Again\n";
+        if(size<=3) cout<<"Wrong Size choice. Input Again\n";
         else HexBoard a(size);
     }
 
